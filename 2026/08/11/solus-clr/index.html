@@ -1,0 +1,344 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Solus Linux系统引导管理器二三事 | Fujiwara no Mokou</title><meta name="author" content="no-Mokou"><meta name="copyright" content="no-Mokou"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="教你如何在Solus Linux里正确的切换内核版本，避免踩坑前言前文我说到过我比较小众，连使用的Linux系统都如此小众，它就是名不见经传的Solus Linux，说白了在国内挺非主流的。至于用Linux的原因就是体积小，速度快，资源占用小，方便调试。对于从事Android开发的我及我那可伶性能的轻薄本来说都是优势。(OS: 主要是内存金贵买不起🤑)  众所周知Solus的引导管理器为clr-">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Solus Linux系统引导管理器二三事">
+<meta property="og:url" content="http://no-mokou.github.io/2026/08/11/solus-clr/index.html">
+<meta property="og:site_name" content="Fujiwara no Mokou">
+<meta property="og:description" content="教你如何在Solus Linux里正确的切换内核版本，避免踩坑前言前文我说到过我比较小众，连使用的Linux系统都如此小众，它就是名不见经传的Solus Linux，说白了在国内挺非主流的。至于用Linux的原因就是体积小，速度快，资源占用小，方便调试。对于从事Android开发的我及我那可伶性能的轻薄本来说都是优势。(OS: 主要是内存金贵买不起🤑)  众所周知Solus的引导管理器为clr-">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://no-mokou.github.io/img/solus.png">
+<meta property="article:published_time" content="2026-08-11T08:08:07.446Z">
+<meta property="article:modified_time" content="2026-08-11T08:10:46.963Z">
+<meta property="article:author" content="no-Mokou">
+<meta property="article:tag" content="教程">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://no-mokou.github.io/img/solus.png"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Solus Linux系统引导管理器二三事",
+  "url": "http://no-mokou.github.io/2026/08/11/solus-clr/",
+  "image": "http://no-mokou.github.io/img/solus.png",
+  "datePublished": "2026-08-11T08:08:07.446Z",
+  "dateModified": "2026-08-11T08:10:46.963Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "no-Mokou",
+      "url": "http://no-Mokou.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="http://no-mokou.github.io/2026/08/11/solus-clr/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.7.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.3.1/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        const data = { value }
+
+        if (ttl != null) {
+          data.expiry = Date.now() + ttl * 86400000
+        }
+
+        localStorage.setItem(key, JSON.stringify(data))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return
+
+        try {
+          const data = JSON.parse(itemStr)
+
+          if (data.expiry && Date.now() > data.expiry) {
+            localStorage.removeItem(key)
+            return
+          }
+
+          return data.value
+        } catch {
+          localStorage.removeItem(key)
+        }
+      }
+    }
+
+    const scriptCache = new Map()
+    const cssCache = new Map()
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => {
+        if (scriptCache.has(url)) {
+          return scriptCache.get(url)
+        }
+
+        const promise = new Promise((resolve, reject) => {
+          const script = document.createElement('script')
+
+          script.src = url
+          script.async = true
+
+          for (const key in attr) {
+            script.setAttribute(key, attr[key])
+          }
+
+          script.onload = resolve
+          script.onerror = reject
+
+          document.head.appendChild(script)
+        })
+
+        scriptCache.set(url, promise)
+
+        return promise
+      },
+      getCSS: (url, id) => {
+        if (cssCache.has(url)) {
+          return cssCache.get(url)
+        }
+
+        const promise = new Promise((resolve, reject) => {
+          const link = document.createElement('link')
+
+          link.rel = 'stylesheet'
+          link.href = url
+
+          if (id) {
+            link.id = id
+          }
+
+          link.onload = resolve
+          link.onerror = reject
+
+          document.head.appendChild(link)
+        })
+
+        cssCache.set(url, promise)
+
+        return promise
+      },
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const metaThemeColor = document.querySelector('meta[name="theme-color"]')
+      const activateDarkMode = () => {
+        document.documentElement.dataset.theme = 'dark'
+        if (metaThemeColor !== null) {
+          metaThemeColor.setAttribute('content', 'undefined')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.dataset.theme = 'light'
+        if (metaThemeColor !== null) {
+          metaThemeColor.setAttribute('content', 'undefined')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '天',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.13.0/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Solus Linux系统引导管理器二三事',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><meta name="generator" content="Hexo 8.1.2"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/mokou.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">3</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">3</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">0</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(/img/solus.png);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">Fujiwara no Mokou</span></a><a class="nav-page-title" href="/"><span class="site-name">Solus Linux系统引导管理器二三事</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">Solus Linux系统引导管理器二三事</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-08-11T08:08:07.446Z" title="发表于 2026-08-11 16:08:07">2026-08-11</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-08-11T08:10:46.963Z" title="更新于 2026-08-11 16:10:46">2026-08-11</time></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">总字数:</span><span class="word-count">2.2k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>7分钟</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><h1 id="教你如何在Solus-Linux里正确的切换内核版本，避免踩坑"><a href="#教你如何在Solus-Linux里正确的切换内核版本，避免踩坑" class="headerlink" title="教你如何在Solus Linux里正确的切换内核版本，避免踩坑"></a>教你如何在Solus Linux里正确的切换内核版本，避免踩坑</h1><h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p><span style="color: #ff7f50;"><strong>前文我说到过我比较小众，连使用的Linux系统都如此小众，它就是名不见经传的Solus Linux，说白了在国内挺非主流的。至于用Linux的原因就是体积小，速度快，资源占用小，方便调试。对于从事Android开发的我及我那可伶性能的轻薄本来说都是优势。<del>(OS: 主要是内存金贵买不起🤑)</del></strong></span></p>
+<blockquote>
+<p>众所周知Solus的引导管理器为clr-boot-manager，最早被用于Intel旗下的Clear Linux，而因为Intel的刀法大家都清楚嘛，Clear Linux已荣光不再，自然而然这个年轻的引导管理器之重任就压在了Solus之上，Solus作为当今clr-boot-manager的主要开发维护者和使用者，背负着它迷茫的前行。</p>
+</blockquote>
+<h3 id="本文主要讲如何升级内核，降级的话类似。因为我曾经踩过几次切换内核的坑，后果有："><a href="#本文主要讲如何升级内核，降级的话类似。因为我曾经踩过几次切换内核的坑，后果有：" class="headerlink" title="本文主要讲如何升级内核，降级的话类似。因为我曾经踩过几次切换内核的坑，后果有："></a>本文主要讲如何升级内核，降级的话类似。因为我曾经踩过几次切换内核的坑，后果有：</h3><ol>
+<li><font color=red><strong>要么被迫重装。（因为输错命令导致新旧内核一并丢失）</strong></font></li>
+<li><font color=red><strong>要么能进桌面，但所有驱动完全失效，只能干看着桌面。（我的台式机就这样了，还好笔记本严格遵守了切换流程）</strong></font></li>
+<li><font color=red><strong>要不就是图形化桌面直接没有了，需要用到当初安装时所需的Live系统介入修复，非常繁琐。</strong></font></li>
+</ol>
+<p><mark>可以见得，真的不要随随便便就清理旧内核，以上事件就发生在清理过程上。那为什么要清理呢？因为不清理的话EFI就爆掉了，没法完成升级，这也许是双系统的痛，我的系统环境是Windows&#x2F;Linux双修 (传统双系统)，EFI占用大，就只能走清理这条路啦。</mark></p>
+<blockquote>
+<p>接下来本文将完整带你走一遍<strong>内核切换、清理、回滚</strong>的全流程，核心操作步骤整理如下表 (install实际可以简写为it)：</p>
+</blockquote>
+<hr>
+<h2 id="核心操作一览表"><a href="#核心操作一览表" class="headerlink" title="核心操作一览表"></a>核心操作一览表</h2><table>
+<thead>
+<tr>
+<th>步骤</th>
+<th>操作目的</th>
+<th>命令</th>
+<th>注意事项</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>查看当前内核版本</td>
+<td><code>uname -r</code></td>
+<td>记住这个版本号，后面清理时别删错</td>
+</tr>
+<tr>
+<td>2</td>
+<td>列出所有已安装内核</td>
+<td><code>sudo clr-boot-manager list-kernels</code></td>
+<td>输出示例：linux-current-7.1.7-351、linux-lts-7.1.5-349</td>
+</tr>
+<tr>
+<td>3</td>
+<td>切换到LTS内核</td>
+<td><code>sudo clr-boot-manager set-kernel linux-lts &amp;&amp; sudo clr-boot-manager update</code></td>
+<td>⚠️ 执行后<strong>必须重启</strong>才生效</td>
+</tr>
+<tr>
+<td>4</td>
+<td>切换回current内核</td>
+<td><code>sudo clr-boot-manager set-kernel linux-current &amp;&amp; sudo clr-boot-manager update</code></td>
+<td>⚠️ 执行后<strong>必须重启</strong>才生效</td>
+</tr>
+<tr>
+<td>5</td>
+<td>安装LTS内核（如未安装）</td>
+<td><code>sudo eopkg install linux-lts</code></td>
+<td>安装后执行步骤3进行切换</td>
+</tr>
+<tr>
+<td>6</td>
+<td>临时选择内核启动</td>
+<td>重启时按 <strong>空格键</strong> 进入GRUB菜单手动选择</td>
+<td>不改变默认内核，仅供临时测试</td>
+</tr>
+<tr>
+<td>7</td>
+<td>删除指定内核（正确姿势）</td>
+<td><code>sudo clr-boot-manager remove-kernel com.solus-project.current.7.1.5-349</code></td>
+<td>✅ 必须指定<strong>完整版本号</strong></td>
+</tr>
+<tr>
+<td>8</td>
+<td>删除所有同名内核（危险操作）</td>
+<td><code>sudo clr-boot-manager remove-kernel linux-current</code></td>
+<td>❌ <strong>严禁执行</strong>！会删掉正在使用的内核</td>
+</tr>
+<tr>
+<td>9</td>
+<td>查看&#x2F;boot分区剩余空间</td>
+<td><code>df -h /boot</code></td>
+<td>一定要保留部分可用空间</td>
+</tr>
+<tr>
+<td>10</td>
+<td>搜索可安装的内核版本</td>
+<td><code>eopkg search linux-current</code></td>
+<td>用于查找特定旧版本号</td>
+</tr>
+<tr>
+<td>11</td>
+<td>重启系统</td>
+<td><code>sudo reboot</code></td>
+<td>切换内核后必须执行</td>
+</tr>
+<tr>
+<td>12</td>
+<td>验证切换结果</td>
+<td><code>uname -r</code></td>
+<td>重启后执行，确认版本已改变</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="重点说明"><a href="#重点说明" class="headerlink" title="重点说明"></a>重点说明</h2><h3 id="❓-为什么升内核"><a href="#❓-为什么升内核" class="headerlink" title="❓ 为什么升内核"></a>❓ 为什么升内核</h3><p><strong>主要是考虑到新功能及修复，我比较“追新”，这是其一，其二是最近大家都看到了，Linux内核漏洞被AI爆出来很多，升级是为了规避风险，当然了你也可以选择不升，固步自封。没有什么特殊要求的话是建议升级的，希望这篇文章迟早能帮助到同样“小众”的你，以current版本为例。</strong></p>
+<p>保险起见升内核流程应当是以下两种方法选一种</p>
+<ol>
+<li><p>Discover 软件中心 -&gt; 更新 (适用于大多数人和大多数情况，很方便)</p>
+</li>
+<li><p>传统命令方式，建议是所有组件干脆一起升级，因为真的可能会有升了内核然后组件出bug或者升了组件然后内核不适配组件的bug，执行sudo eopkg up (upgrade实际可以简写为up)。除非你有强制需求否则不建议手动去安装指定内核。</p>
+</li>
+</ol>
+<p><strong>希望看完核心操作的你不要着急输入命令，我梳理过了更通俗易懂的流程 (上面那个是AI梳理的噢😄)</strong></p>
+<ol>
+<li><p>第一步打开你喜欢的任何终端都行，默认你已经下载完了新版内核。</p>
+</li>
+<li><p>输入<code>sudo clr-boot-manager list-kernels</code>，此时会看见你下载好的新内核及打着*号 (星号)的旧内核，也就是你正在使用的内核，当然，可能你从来不清理就会同时看到多个内核版本，选好最新的即可。</p>
+</li>
+<li><p>输入<code>sudo clr-boot-manager set-kernel &lt;kernel-version&gt;</code>，注意，这里的<code>&lt;kernel-version&gt;</code>指的是带<code>com.solus-project.current.x.x.x-xxx</code>的完整<code>version</code>，千万不要直接输入数字<code>version</code>，如<code>7.1.7-351</code>，真的是血泪教训，当初我第一次切内核就犯了这个大忌，当时因为和清理一并执行，新旧内核都没了，被迫重装。正确范例：<code>sudo clr-boot-manager set-kernel com.solus-project.current.7.1.7-351</code> (嫌长的话复制粘贴不用我教吧…)</p>
+</li>
+<li><p>现在可以选择检查*号 (星号)是否在你所切换的内核之前了，也可以不检查，直接下一步，如果你的EFI大小充足，可以直接执行<code>sudo clr-boot-manager update</code>，如果你的EFI大小并不充裕，应先清理旧内核，执行<code>sudo clr-boot-manager remove-kernel &lt;kernel-version&gt;</code>，和<code>set-kernel</code>同理，版本号一定要复制完整，再执行<code>sudo usysconf run -f</code>，二者皆是等待完毕后重启。</p>
+</li>
+</ol>
+<p><del>5. 保险起见重启后可再直接执行一次<code>sudo clr-boot-manager update</code>，当然这不是必要的，而是怕系统万一存在什么bug。</del></p>
+<h3 id="⚠️-清理内核注意"><a href="#⚠️-清理内核注意" class="headerlink" title="⚠️ 清理内核注意"></a>⚠️ 清理内核注意</h3><p>Solus 的 EFI 分区官方要求是 <strong>512MB</strong>，但像我这样持有双系统的在分区上做不到，除非你是只有这一个系统，那升级时估计自动切换新版了，这篇文章对你帮助就不大。而内核装多了 EFI 分区必然会爆满，直接导致系统更新失败。<strong>如果你跟我情况一样，务必定期清理旧内核。</strong></p>
+<p>正确的清理方式：最好是一条一条的删，避免错删误删。<br>挨条执行<code>sudo clr-boot-manager remove-kernel com.solus-project.current.x.x.x-xxx</code>，按具体版本号具体行事，一定要看清楚了再删哦。搞清楚命令是死的，人是活的哟。</p>
+<h3 id="🔴-我的翻车案例"><a href="#🔴-我的翻车案例" class="headerlink" title="🔴 我的翻车案例"></a>🔴 我的翻车案例</h3><p>我第一次用Solus Linux的时候得追溯到2024年，当时还是Solus 4.5，当时这个系统还有点毛坯房的感觉，很多东西不太完善，而且能查到的资料又少，导致在当时本就不大熟悉Linux的我应付这些问题更是雪上加霜。梳理了下我2024-2026年间遇到的切换内核问题包括但不限于 (排序不分先后)：</p>
+<ol>
+<li><p><font color=red>脑子一热输入了<code>sudo clr-boot-manager set-kernel current.x.x.x-xxx</code>，或<code>sudo clr-boot-manager set-kernel x.x.x-xxx</code>，这种无效切换，我都不记得当时自己怎么想的。。本来这也没啥事，坏在后面直接把内核删了，当时删除复制了完整的而设置却没有，重启就出事。真是气死我了呀！</font></p>
+</li>
+<li><p><font color=red>执行<code>remove-kernel</code>相关时不慎把所有内核全删了，包括正在运行的，神奇的是你不重启它看不出来毛病，一重启就毁了。</font></p>
+</li>
+<li><p><font color=red>正常执行切换流程，但是有一个自动切换包流程出了个什么错误，没在意，完事重启后遇上了我前面写到的踩坑第二条，我怀疑当时真的是系统bug，只能说多留个心眼吧。</font></p>
+</li>
+<li><p><font color=red>也就是前面的踩坑第三条，好像是官方编译的内核出了问题，然后后面绕了很多弯子去修复它。</font></p>
+</li>
+<li><p><font color=red>EFI爆了，只遇到过一次，具体影响就是使用体验相当奇怪，各种桌面，窗口bug都冒出来。</font></p>
+</li>
+</ol>
+<p><strong>所以删除内核请务必指定完整版本号进行删除！！！</strong></p>
+<hr>
+<h2 id="结语"><a href="#结语" class="headerlink" title="结语"></a>结语</h2><p><font color=green><em><strong>希望屏幕前的你不要重蹈我的覆辙，真的麻了。</strong></em></font></p>
+<blockquote>
+<p>📌 <strong>本文环境</strong>：<span style="color: #ffb7c5;"><u>截止本文撰写时间环境为Solus 4.9（Serenity）KDE Plasma，内核版本为Linux kernel 7.1.7-351。不同版本命令可能有细微差异，谨以官方文档为准。</u></span></p>
+</blockquote>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="http://no-Mokou.github.io">no-Mokou</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="http://no-mokou.github.io/2026/08/11/solus-clr/">http://no-mokou.github.io/2026/08/11/solus-clr/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="http://no-Mokou.github.io" target="_blank">Fujiwara no Mokou</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E6%95%99%E7%A8%8B/">教程</a></div><div class="post-share"><div class="social-share" data-image="/img/solus.png" data-sites="facebook,x,wechat,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related full-width" href="/2026/08/07/evil-cultivation/" title="记一份搭建博客过程中的“邪修”小径"><img class="cover" src="https://api.mtyqx.cn/tapi/random.php" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">记一份搭建博客过程中的“邪修”小径</div></div><div class="info-2"><div class="info-item-1">先声明一下，正经开发不要学，因为这可能影响你后续对框架的升级及升级后要处理的“善后”问题 这不是一篇正经技术教程，实际运用时请三思。  起因：侧边信息栏的“分类”我用不上，留着又难看因为我觉得有“文章”（也就是归档）和“标签”够用了，再加上“分类”就显得臃肿，那该怎么解决呢？ 然而博客我也是第一次建，难免对配置之类的不大熟悉，就费了些心思去查相关资料到底该怎么操作。 开始尝试：我试了改_config.butterfly.yml，把category、categories相关的值改为false，然而对侧信息栏的毫无作用，应该只对文章内部那些有效果。 我瞬间就意识到了官方配置也很难面面俱到，可以理解。 于是发动脑筋，想到既然玩正的不行，那咱就来点逆的，没错，就是改动butterfly的源头文件。 于是乎第一次邪修之旅经过一番检索，我发现了所需要的目标源头文件，位于——\themes\butterfly\layout\includes\widget下的card_author.pug 打开文件后翻了几行就发现了对应的代码： 123a(href=url_for(config.category...</div></div></div></a></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/mokou.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">no-Mokou</div><div class="author-info-description">取这个名字是因为我喜欢东方Project中的藤原妹红这一角色</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">3</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">3</div></a><!--a(href=url_for(config.category_dir) + '/')//.headline= _p('aside.categories')
+//.length-num= site.categories.length
+--></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/no-Mokou"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">欢迎各位大驾光临我的个人博客~</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%95%99%E4%BD%A0%E5%A6%82%E4%BD%95%E5%9C%A8Solus-Linux%E9%87%8C%E6%AD%A3%E7%A1%AE%E7%9A%84%E5%88%87%E6%8D%A2%E5%86%85%E6%A0%B8%E7%89%88%E6%9C%AC%EF%BC%8C%E9%81%BF%E5%85%8D%E8%B8%A9%E5%9D%91"><span class="toc-number">1.</span> <span class="toc-text">教你如何在Solus Linux里正确的切换内核版本，避免踩坑</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-number">1.1.</span> <span class="toc-text">前言</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%9C%AC%E6%96%87%E4%B8%BB%E8%A6%81%E8%AE%B2%E5%A6%82%E4%BD%95%E5%8D%87%E7%BA%A7%E5%86%85%E6%A0%B8%EF%BC%8C%E9%99%8D%E7%BA%A7%E7%9A%84%E8%AF%9D%E7%B1%BB%E4%BC%BC%E3%80%82%E5%9B%A0%E4%B8%BA%E6%88%91%E6%9B%BE%E7%BB%8F%E8%B8%A9%E8%BF%87%E5%87%A0%E6%AC%A1%E5%88%87%E6%8D%A2%E5%86%85%E6%A0%B8%E7%9A%84%E5%9D%91%EF%BC%8C%E5%90%8E%E6%9E%9C%E6%9C%89%EF%BC%9A"><span class="toc-number">1.1.1.</span> <span class="toc-text">本文主要讲如何升级内核，降级的话类似。因为我曾经踩过几次切换内核的坑，后果有：</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E6%93%8D%E4%BD%9C%E4%B8%80%E8%A7%88%E8%A1%A8"><span class="toc-number">1.2.</span> <span class="toc-text">核心操作一览表</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%87%8D%E7%82%B9%E8%AF%B4%E6%98%8E"><span class="toc-number">1.3.</span> <span class="toc-text">重点说明</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E2%9D%93-%E4%B8%BA%E4%BB%80%E4%B9%88%E5%8D%87%E5%86%85%E6%A0%B8"><span class="toc-number">1.3.1.</span> <span class="toc-text">❓ 为什么升内核</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E2%9A%A0%EF%B8%8F-%E6%B8%85%E7%90%86%E5%86%85%E6%A0%B8%E6%B3%A8%E6%84%8F"><span class="toc-number">1.3.2.</span> <span class="toc-text">⚠️ 清理内核注意</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%F0%9F%94%B4-%E6%88%91%E7%9A%84%E7%BF%BB%E8%BD%A6%E6%A1%88%E4%BE%8B"><span class="toc-number">1.3.3.</span> <span class="toc-text">🔴 我的翻车案例</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%BB%93%E8%AF%AD"><span class="toc-number">1.4.</span> <span class="toc-text">结语</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2026/08/11/solus-clr/" title="Solus Linux系统引导管理器二三事"><img src="/img/solus.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Solus Linux系统引导管理器二三事"/></a><div class="content"><a class="title" href="/2026/08/11/solus-clr/" title="Solus Linux系统引导管理器二三事">Solus Linux系统引导管理器二三事</a><time datetime="2026-08-11T08:08:07.446Z" title="发表于 2026-08-11 16:08:07">2026-08-11</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/08/07/evil-cultivation/" title="记一份搭建博客过程中的“邪修”小径"><img src="https://api.mtyqx.cn/tapi/random.php" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="记一份搭建博客过程中的“邪修”小径"/></a><div class="content"><a class="title" href="/2026/08/07/evil-cultivation/" title="记一份搭建博客过程中的“邪修”小径">记一份搭建博客过程中的“邪修”小径</a><time datetime="2026-08-07T06:04:18.335Z" title="发表于 2026-08-07 14:04:18">2026-08-07</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/08/05/hello-world/" title="世界赠予我的"><img src="https://api.horosama.com/random.php" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="世界赠予我的"/></a><div class="content"><a class="title" href="/2026/08/05/hello-world/" title="世界赠予我的">世界赠予我的</a><time datetime="2026-08-05T07:59:49.948Z" title="发表于 2026-08-05 15:59:49">2026-08-05</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url(/img/solus.png);"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2026 By no-Mokou</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 8.1.2</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.7.0</a></span></div><div class="footer_custom_text">作者生于2005年，INFP-T，流动性别，性少数友好者（除了G）</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.7.0"></script><script src="/js/main.js?v=5.7.0"></script><div class="js-pjax"></div><script id="canvas_nest" defer="defer" color="0,0,255" opacity="0.7" zIndex="-1" count="99" mobile="false" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/dist/canvas-nest.min.js"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
